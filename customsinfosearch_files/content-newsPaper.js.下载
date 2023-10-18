@@ -1,0 +1,20 @@
+function content_newsPaper(type, element){
+    var $thisForm = $(element).parent();
+     if(!$thisForm.is("form")){
+        $thisForm = $thisForm.parent();
+    }
+    var emailVal = $thisForm.find(".email").val();
+    var actionPaper = $thisForm.find(".actionPaper");
+    var hiddenSubmit = $thisForm.find(".hiddenSubmit");
+    if(isEmail(emailVal)){
+        $(actionPaper).val(type);
+        hiddenSubmit.click();
+    }else{
+        $(".msg-text p").text("請輸入正確Email格式");
+        $(".light-msg-box").toggle(0, function(){
+            if($(".light-msg-box").is(":visible")){
+                $('.light-msg-box').find('a')[0].focus();
+            }
+        });
+    }
+}

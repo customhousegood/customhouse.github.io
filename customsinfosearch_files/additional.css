@@ -1,0 +1,33 @@
+/*-------------------------------------------------------------- additional css setting*/
+.article-page article .table > tbody > tr > td,
+.article-page article .table > tbody > tr > th,
+.article-page article .table > tfoot > tr > td,
+.article-page article .table > tfoot > tr > th,
+.article-page article .table > thead > tr > td,
+.article-page article .table > thead > tr > th {
+  padding: 8px;
+  line-height: 1.42857143;
+  vertical-align: top; }
+
+.article-page article .table > tbody > tr.success > td,
+.article-page article .table > tbody > tr.success > th,
+.article-page article .table > tbody > tr > td.success,
+.article-page article .table > tbody > tr > th.success,
+.article-page article .table > tfoot > tr.success > td,
+.article-page article .table > tfoot > tr.success > th,
+.article-page article .table > tfoot > tr > td.success,
+.article-page article .table > tfoot > tr > th.success,
+.article-page article .table > thead > tr.success > td,
+.article-page article .table > thead > tr.success > th,
+.article-page article .table > thead > tr > td.success,
+.article-page article .table > thead > tr > th.success {
+  background-color: #dff0d8; }
+
+.article-page article .table.table-bordered,
+.article-page article .table.table-bordered > tbody > tr > td,
+.article-page article .table.table-bordered > tbody > tr > th,
+.article-page article .table.table-bordered > tfoot > tr > td,
+.article-page article .table.table-bordered > tfoot > tr > th,
+.article-page article .table.table-bordered > thead > tr > td,
+.article-page article .table.table-bordered > thead > tr > th {
+  border: 1px solid #ddd; }

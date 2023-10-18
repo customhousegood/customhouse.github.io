@@ -1,0 +1,240 @@
+var originalSetting = {
+	_generateMonthYearHeader : $.datepicker._generateMonthYearHeader,
+	_formatDate : $.datepicker._formatDate,
+	_phoenixGenerateHTML : $.datepicker._generateHTML,
+	_generateHTML: function(inst){
+        var html = $($.datepicker._phoenixGenerateHTML(inst));
+        html.children('a.ui-datepicker-prev').attr('href','javascipt:void(0);');
+        html.children('a.ui-datepicker-next').attr('href','javascipt:void(0);');
+        html.children('div.ui-datepicker-title').children('.ui-datepicker-year')
+        	.attr('title','Select year');
+        html.children('div.ui-datepicker-title').children('.ui-datepicker-month')
+	        .attr('title','Select month');
+        
+        setDatepickerATtitle(html);
+        return html;
+	},
+	_phoenixUpdateDatepicker : $.datepicker._updateDatepicker,
+	_updateDatepicker: function( inst ){
+		$($.datepicker._phoenixUpdateDatepicker(inst));
+		$('.calendar').each(function(){
+			var focus = $(this).attr('focus');
+			if(focus!=''){
+				$(this).find('.'+focus).focus();
+			}		
+		});
+	}
+};
+
+var chineseSetting = {
+	_phoenixGenerateMonthYearHeader : $.datepicker._generateMonthYearHeader,
+
+	_generateMonthYearHeader : function(inst, drawMonth, drawYear, minDate, maxDate, secondary, monthNames, monthNamesShort) {
+		var result = $($.datepicker._phoenixGenerateMonthYearHeader(inst, drawMonth, drawYear, minDate, maxDate, secondary, monthNames, monthNamesShort));
+		result.children("select.ui-datepicker-year").children().each(function() {
+					$(this).text('民國' + ($(this).text() - 1911) + '年');
+		});
+		if (inst.yearshtml) {
+			var origyearshtml = inst.yearshtml;
+			setTimeout(function() {
+				if (origyearshtml === inst.yearshtml) {
+					inst.dpDiv.find('select.ui-datepicker-year:first').replaceWith(inst.yearshtml);
+					inst.dpDiv.find('select.ui-datepicker-year').children().each(
+									function() {
+										$(this).text('民國' + ($(this).text() - 1911) + '年');
+									});
+				}
+				origyearshtml = inst.yearshtml = null;
+			}, 0);
+		}
+		return $("<div class='ui-datepicker-title'></div>").append(result.clone()).html();
+	},
+
+	_formatDate : function(inst, day, month, year) {
+		if (!day) {
+			inst.currentDay = inst.selectedDay;
+			inst.currentMonth = inst.selectedMonth;
+			inst.currentYear = inst.selectedYear;
+		}
+		var date = (day ? (typeof day == 'object' ? day : this._daylightSavingAdjust(new Date(year, month, day))) 
+				         : this._daylightSavingAdjust(new Date(inst.currentYear,inst.currentMonth, inst.currentDay)));
+		return (date.getFullYear() - 1911) + "-" + (date.getMonth() < 9 ? "0" + (date.getMonth() + 1) : (date.getMonth() + 1)) + "-"
+				+ (date.getDate() <= 9 ? "0" + date.getDate() : date.getDate());
+	},
+	_phoenixGenerateHTML : $.datepicker._generateHTML,
+	_generateHTML: function(inst){
+        var html = $($.datepicker._phoenixGenerateHTML(inst));
+        html.children('a.ui-datepicker-prev').attr('href','javascipt:void(0);').attr('title','上個月');
+        html.children('a.ui-datepicker-next').attr('href','javascipt:void(0);').attr('title','下個月');
+        html.children('div.ui-datepicker-title').children('.ui-datepicker-year')
+        	.attr('title','請選擇年分');
+        html.children('div.ui-datepicker-title').children('.ui-datepicker-month')
+	        .attr('title','請選擇月分');
+        setDatepickerATtitle(html);
+        return html;
+	}
+};
+
+$(function() {
+	
+	$.datepicker.regional['zh-TW'] = {
+		closeText : '關閉',
+		prevText : '上個月',
+		nextText : '下個月',
+		currentText : '今天',
+		monthNames : [ '一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月' ],
+		monthNamesShort : [ '一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月' ],
+		dayNames : [ '星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六' ],
+		dayNamesShort : [ '周日', '周一', '周二', '周三', '周四', '周五', '周六' ],
+		dayNamesMin : [ '日', '一', '二', '三', '四', '五', '六' ],
+		weekHeader : '周',
+		dateFormat : 'yy-mm-dd',
+		timeFormat : 'HH:mm:ss',
+		showHour : true,
+		showMinute : true,
+		firstDay : 1,
+		isRTL : false,
+		showMonthAfterYear : true,
+		titleMsg : ""
+	};
+	$.datepicker.regional['en-US'] = {
+		prevText : 'Last month',
+		nextText : 'Next month',
+		titleMsg : ""
+	};
+
+	$(".datepicker").attr("readonly", "readonly");
+
+	if ($("#language").val() === "zh-TW") {
+		$.datepicker.setDefaults($.datepicker.regional['zh-TW']);
+	} else {
+		var dateFormat = {
+			"dateFormat" : "yy-mm-dd"
+		};
+		$.extend($.datepicker.regional['en-US'], dateFormat);
+		$.datepicker.setDefaults($.datepicker.regional['en-US']);
+	}
+	
+	if ($("#siteDateFormat").val() === "Minguo") {
+		ChineseDatePicker();
+		initChineseDatepicker('datepickerStart', 'datepickerEnd');
+	} else {
+		WesternDatePicker();
+		initWesternDatepicker('datepickerStart', 'datepickerEnd');
+	}
+});
+
+function ChineseDatePicker() {
+	$.extend($.validator.methods,{ dateISO : function(value, element) {
+												var splitDate = value.split("-");
+												value = parseInt(splitDate[0]) + 1911 + "-" + splitDate[1] + "-" + splitDate[2];
+												return this.optional(element) 
+													|| /^\d{4}[\/\-](0?[1-9]|1[012])[\/\-](0?[1-9]|[12][0-9]|3[01])$/.test(value);
+											},
+	});
+
+	$.validator.addMethod("datetimeISO", function(value, element) {
+											var splitDate = value.split("-");
+											value = parseInt(splitDate[0]) + 1911 + "-" + splitDate[1] + "-" + splitDate[2];
+											return this.optional(element) || /^\d{4}[\/-]\d{1,2}[\/-]\d{1,2} \d{1,2}:\d{1,2}$/.test(value);
+										}, "Date time validate error");
+
+	$("#chineseDiv").show();
+	$("#westernDiv").hide();
+
+	$.extend($.datepicker, chineseSetting);
+}
+
+function initChineseDatepicker(inputStartID, inputEndID) {
+	$("#" + inputStartID).datepicker({
+				changeMonth : true,
+				changeYear : true,
+				dateFormat : 'yy-mm-dd',
+				showHour : true,
+				showMinute : true,
+				beforeShow:function(){
+					thisHasDatepicker = $(this);
+				},
+				onClose : function(selectedDate, input) {
+					thisHasDatepicker.focus();
+					$(this).valid();
+					$("#" + inputEndID).datepicker("option", "minDate", $.datepicker._getDate(input));
+				}
+			});
+
+	$("#" + inputEndID).datepicker({
+		changeMonth : true,
+		changeYear : true,
+		dateFormat : 'yy-mm-dd',
+		beforeShow:function(){
+			thisHasDatepicker = $(this);
+		},
+		onClose : function(selectedDate, input) {
+			thisHasDatepicker.focus();
+		}
+	});
+}
+
+function WesternDatePicker() {
+	$("#chineseDiv").hide();
+	$("#westernDiv").show();
+	$.validator.addMethod("datetimeISO", function(value, element) {
+		return this.optional(element) || /^\d{4}[\/-]\d{1,2}[\/-]\d{1,2} \d{1,2}:\d{1,2}$/.test(value);
+	}, "Date time validate error");
+
+	$.extend($.datepicker, originalSetting);
+}
+
+var thisHasDatepicker;
+function initWesternDatepicker(inputStartID, inputEndID) {
+	$("#" + inputStartID).datepicker({
+				changeMonth : true,
+				changeYear : true,
+				beforeShow:function(){
+					thisHasDatepicker = $(this);
+				},
+				onClose : function(selectedDate, input) {
+					thisHasDatepicker.focus();
+					$(this).valid();
+					$("#" + inputEndID).datepicker("option", "minDate", $.datepicker._getDate(input));
+				}
+			});
+
+	$("#" + inputEndID).datepicker({
+		changeMonth : true,
+		changeYear : true,
+		beforeShow:function(){
+			thisHasDatepicker = $(this);
+		},
+		onClose : function(selectedDate, input) {
+			thisHasDatepicker.focus();
+		}
+	});
+}
+/*******************************************************************************
+ * msg 不等於空，msg 字包含"[dDate]",會replace 成日期， ex:點擊[dDate]會..，轉換後：點擊xxx-xx-xx會...
+ ******************************************************************************/
+function setMsg(msg) {
+	var msgMap = {"titleMsg" : msg};
+	$.extend($.datepicker.regional["zh-TW"], msgMap);
+	$.extend($.datepicker.regional["en-US"], msgMap);
+}
+
+function setDatepickerATtitle(html){
+	var title = $("#language").val() === "zh-TW"? $.datepicker.regional["zh-TW"].titleMsg:$.datepicker.regional["en-US"].titleMsg;
+	html.find("tbody td").each(function(index){
+    	var $this = $(this);
+    	if(!$this.hasClass('ui-state-disabled')){
+    		var year =$this.attr("data-year"),
+	     		month = parseInt($this.attr("data-month")) +1,
+	     		aSelector= $this.find("a"),
+	     		day = aSelector.text();
+    		if(title!=""){
+    			aSelector.prop("title", title.replace("[dDate]",year+"-" + month + "-"+day));
+    		}else{
+    			aSelector.prop("title",year+"-" + month + "-"+day);
+    		}
+    	}
+    })
+}
+

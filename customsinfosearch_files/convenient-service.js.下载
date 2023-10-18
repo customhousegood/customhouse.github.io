@@ -1,0 +1,146 @@
+// 便捷服務輪播
+const ConvenientServiceModule = {
+	idx: 1,
+	slidesToShow: 4,
+	slidesToScroll: 1,
+	slidesToShow769: 3,
+	slidesToScroll769: 1,
+	slidesToShow601: 2,
+	slidesToScroll601: 1,
+	slidesToShow481: 1,
+	slidesToScroll481: 1,
+	autoplaySpeed: 5000,
+	carousel: function() {
+		const self = this;
+		const param = {
+			idx: arguments[0].idx || self.idx,
+			slidesToShow: arguments[0].slidesToShow || self.slidesToShow,
+			slidesToScroll: arguments[0].slidesToScroll || self.slidesToScroll,
+			slidesToShow769: arguments[0].slidesToShow769 || self.slidesToShow769,
+			slidesToScroll769: arguments[0].slidesToScroll769 || self.slidesToScroll769,
+			slidesToShow601: arguments[0].slidesToShow601 || self.slidesToShow601,
+			slidesToScroll601: arguments[0].slidesToScroll601 || self.slidesToScroll601,
+			slidesToShow481: arguments[0].slidesToShow481 || self.slidesToShow481,
+			slidesToScroll481: arguments[0].slidesToScroll481 || self.slidesToScroll481,
+			autoplaySpeed: arguments[0].autoplaySpeed || self.autoplaySpeed,
+		}
+		const $cs = $('.convenient-service-' + param.idx + ' > div');
+
+		$cs.slick({
+			slidesToShow: param.slidesToShow,
+			slidesToScroll: param.slidesToScroll,
+			autoplay: false,
+			autoplaySpeed: param.autoplaySpeed,
+			infinite: true,
+			accessibility: false,
+			pauseOnFocus:true,
+			pauseOnHover:true,
+			responsive: [
+				{
+					breakpoint: 769,
+					settings: {
+						slidesToShow: param.slidesToShow769
+					}
+				},
+				{
+					breakpoint: 601,
+					settings: {
+						slidesToShow: param.slidesToShow601,
+						slidesToScroll: param.slidesToScroll601
+					}
+				},
+				{
+					breakpoint: 481,
+					settings: {
+						slidesToShow: param.slidesToShow481,
+						slidesToScroll: param.slidesToScroll481
+					}
+				}
+			]
+		});
+
+		// 無障礙 start
+		let isShiftTab = false;
+		let isTab = false;
+		$cs.keydown(function(e) {
+			isTab = (e.key === 'Tab' ? true : false);
+			isShiftTab = (e.shiftKey && e.key === 'Tab' ? true : false);
+		});
+	
+		// focus 第一個被複製的 slick-slide 後，就直接 focus 不是複製的第一個
+		$cs.find('.slick-track div.slick-cloned').eq(0).find('a').focus(function() {
+			$cs.find('.slick-track div.slick-slide:not(.slick-cloned)').eq(0).find('a').eq(0).focus();
+			$cs.find('.slick-track div.slick-cloned').css('opacity', '0');
+			$cs.slick('slickGoTo', 0);
+		});
+
+		$cs.find('.slick-next').focusout(function() {
+			if (isShiftTab) {
+				$cs.find('.slick-track .slick-slide:not(.slick-cloned)').last().find('a').last().focus();
+				$cs.find('.slick-track div.slick-cloned').css('opacity', '0');
+			}
+		});
+
+		$cs.find('.slick-track .slick-slide:not(.slick-cloned)').first().find('a').first().focusout(function() {
+			if (isShiftTab) {
+				$cs.find('.slick-prev').focus();
+				$cs.slick('slickGoTo', 0);
+				$cs.find('.slick-track div.slick-cloned').css('opacity', '1');
+			}
+		});	
+		
+		// slick plugin 為了輪播複製出的多於區塊，使用無障礙輔助的 tab 鍵瀏覽時需略過處理
+		const cs = document.querySelector('.convenient-service-' + param.idx);
+		const slicksClone = cs.querySelector('.slick-slider').querySelector('.slick-track').querySelectorAll('.slick-cloned');
+		let isMousedown = false; // 是否為滑鼠點擊
+		Array.prototype.slice.call(slicksClone).forEach(function(slick) {
+			const aList = slick.querySelectorAll('a');
+			Array.prototype.slice.call(aList).forEach(function(a) {
+				a.addEventListener('focus', function(e){
+					if (isMousedown) {
+						setTimeout(function(){
+							$(e.target).blur();
+						}, 500);
+						return;
+					}
+					let totalLen = $cs.find('.slick-track div.slick-slide').length;
+					let currentIdx = $(e.target).parent().parent().parent().parent().index();
+					let judgmentIdx = Number($(window).width() > 768 ? param.slidesToShow : ($(window).width() > 600 ? param.slidesToScroll769 : ($(window).width() > 480 ? param.slidesToScroll601 : param.slidesToScroll481)));
+					let realLen = (totalLen - judgmentIdx) / 2;
+					
+					if(judgmentIdx === (currentIdx - realLen)) {
+						$cs.find('.slick-track div.slick-slide:not(.slick-cloned)').eq(0).find('a').eq(0).focus();
+						$cs.find('.slick-next').focus();
+						$cs.find('.slick-track div.slick-cloned').css('opacity', '1');
+						$cs.slick('slickGoTo', 0);
+
+						/*
+							判斷瀏覽器不為 Chrome 時，則執行以下程式碼
+							非 Chrome 瀏覽器在便捷服務模組依序輪完 focus 後無法跳回第一個精準輪播點
+						*/
+						const agent = navigator.userAgent; // 瀏覽器
+						if (agent.indexOf('Chrome') < 0 || agent.indexOf('Edge') > 0) {
+							let slideHeight = $cs.find('.slick-track div.slick-slide').height();
+					
+							$cs.find('.slick-slider .slick-track').css({
+								'width': '100%',
+								'height': slideHeight +'px',
+								'overflow': 'hidden'
+							});
+						}
+					}
+				});
+			});
+			Array.prototype.slice.call(aList).forEach(function(a) {
+				a.addEventListener('mousedown', function(){
+					isMousedown = true;
+				});
+			});
+			Array.prototype.slice.call(aList).forEach(function(a) {
+				a.addEventListener('mouseup', function(){
+					isMousedown = false;
+				});
+			});
+		});
+	},
+};

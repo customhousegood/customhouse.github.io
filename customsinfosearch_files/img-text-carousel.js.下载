@@ -1,0 +1,134 @@
+// 圖文輪播(含單張大圖輪播)
+const ImgTextCarouselModule = {
+  idx: 1,
+  isBanner: false,
+  slidesToShow: 5,
+  slidesToScroll: 3,
+  slidesToShow769: 3,
+  slidesToScroll769: 3,
+  slidesToShow601: 2,
+  slidesToScroll601: 2,
+  slidesToShow481: 1,
+  slidesToScroll481: 1,
+  autoplay: true,
+  autoplaySpeed: 5000,
+  carousel: function() {
+    const self = this;
+    const param = {
+      idx: arguments[0].idx || self.idx,
+      isBanner: arguments[0].isBanner || self.isBanner,
+      slidesToShow: arguments[0].slidesToShow || self.slidesToShow,
+      slidesToScroll: arguments[0].slidesToScroll || self.slidesToScroll,
+      slidesToShow769: arguments[0].slidesToShow769 || self.slidesToShow769,
+      slidesToScroll769: arguments[0].slidesToScroll769 || self.slidesToScroll769,
+      slidesToShow601: arguments[0].slidesToShow601 || self.slidesToShow601,
+      slidesToScroll601: arguments[0].slidesToScroll601 || self.slidesToScroll601,
+      slidesToShow481: arguments[0].slidesToShow481 || self.slidesToShow481,
+      slidesToScroll481: arguments[0].slidesToScroll481 || self.slidesToScroll481,
+      autoplay: arguments[0].slidesToisAuto || self.autoplay,
+      autoplaySpeed: arguments[0].autoplaySpeed || self.autoplaySpeed,
+    }
+    const $imgCarousel = $(
+      (param.isBanner ? '.banner-' : '.img-text-carousel-')
+      + param.idx +' > div'
+    );
+    const imgResponsive = [
+      {
+        breakpoint: 769,
+        settings: {
+          slidesToShow: param.slidesToShow769
+        }
+      },
+      {
+        breakpoint: 601,
+        settings: {
+          slidesToShow: param.slidesToShow601,
+          slidesToScroll: param.slidesToScroll601
+        }
+      },
+      {
+        breakpoint: 481,
+        settings: {
+          slidesToShow: param.slidesToShow481,
+          slidesToScroll: param.slidesToScroll481
+        }
+      }
+    ];
+    $imgCarousel.slick({
+      dots: param.isBanner,
+      slidesToShow: param.isBanner ? 1 : param.slidesToShow,
+      slidesToScroll: param.isBanner ? 1: param.slidesToScroll,
+      autoplay: param.autoplay,
+      autoplaySpeed: param.autoplaySpeed,
+      infinite: true,
+      accessibility: false,
+      pauseOnFocus: true,
+      pauseOnHover: true,
+      responsive: param.isBanner ? [] : imgResponsive,
+    });
+
+    // 配合無障礙 focus
+    let isTab = false;
+    let isShiftTab = false;
+    let $allSlide = $imgCarousel.find('.slick-track .slick-slide');
+    let $slide = $imgCarousel.find('.slick-track .slick-slide:not(.slick-cloned)');
+    let $slideClone = $imgCarousel.find('.slick-track .slick-slide.slick-cloned');
+    let slideLen = $slide.length;
+    let scloneLen = $slideClone.length;
+
+    $imgCarousel.keydown(function(e) {
+      isTab = (e.key === 'Tab' ? true : false);
+      isShiftTab = (e.shiftKey && e.key === 'Tab' ? true : false);
+    });
+
+    // 為因應 RWD breakpoint 變換，需重新抓取資料
+    $imgCarousel.on('breakpoint', function(event, slick, breakpoint) {
+      $allSlide = $imgCarousel.find('.slick-track .slick-slide');
+      $slide = $imgCarousel.find('.slick-track .slick-slide:not(.slick-cloned)');
+      $slideClone = $imgCarousel.find('.slick-track .slick-slide.slick-cloned');
+      slideLen = $slide.length;
+      scloneLen = $slideClone.length;
+      accessibilityFn();
+    });
+
+    const accessibilityFn = function() {
+      // 為因應 RWD 變換顯示數量，需解除上一個 breakpoint 的設定
+      $allSlide.find('a').unbind('focus');
+      $allSlide.find('a').unbind('focusout');
+
+      // 當第一個 slick-cloned focus 後，直接 focus 第一個原始 slick-slide:not(.slick-cloned)
+      $slideClone.eq(0).find('a').focus(function() {
+        $slide.eq(0).find('a').focus();
+        $slideClone.css('opacity', '0');
+        $imgCarousel.slick('slickGoTo', 0);
+        $allSlide.attr('aria-hidden', 'false');
+        $allSlide.find('a').attr('tabindex', '0');
+      });
+
+      $slideClone.eq(scloneLen - 1).find('a').focus(function() {
+        $allSlide.attr('aria-hidden', 'false');
+        $allSlide.find('a').attr('tabindex', '0');
+      });
+
+      // 當原始 slick-slide:not(.slick-cloned) 之後的第一個 slick-cloned focus 後
+      $slideClone.eq(scloneLen - slideLen).find('a').focus(function() {
+        // 直接 focus 第一個原始 slick-slide:not(.slick-cloned)
+        $slide.eq(0).find('a').focus();
+
+        // 直接 focus 下一頁按鈕(slick-next)
+        if (isTab && !isShiftTab) {
+          $slide.eq(0).find('a').focus();
+          $imgCarousel.find('.slick-next').focus();
+          $slideClone.css('opacity','1');
+        }
+      });
+
+      $slide.eq(0).find('a').focusout(function() {
+        if (isShiftTab) {
+          $imgCarousel.find('.slick-prev').focus();
+        }
+      });
+    }
+    accessibilityFn();
+  },
+};

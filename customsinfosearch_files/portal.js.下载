@@ -1,0 +1,73 @@
+function isMobile() {
+    try{ 
+        document.createEvent("TouchEvent"); 
+		return true; 
+    } catch(e){ 
+    	return false;
+    }
+}
+
+function isEmail(email) {
+	var regex = /^([a-zA-Z0-9_.+-])+\@(([a-zA-Z0-9-])+\.)+([a-zA-Z0-9]{2,4})+$/;
+    return regex.test(email);
+}
+//財政部_統計指標
+function changeImgtxtStatistics(id,link,imgKey,target,title, alt){
+	var statisticsId = document.getElementById(id);
+	var img = $($(statisticsId).find("img").get());
+	img.attr('src',imgKey);
+	img.attr('alt', alt);
+	img.parent().attr("href",link);
+	img.parent().attr("title",title);
+	if(target == "Y"){
+		img.parent().attr("target","_blank");
+	}else{
+		img.parent().attr("target","_self");
+	}
+}
+$(document).ready(function() {
+    //模組下拉選單連結共用js add By ting
+    $('.input-dropdownlist').click(function(){
+		var $selected = $(document.getElementById($(this).attr("data-selectId"))).find(":selected"),_target = $selected.attr("data-isnewwindow")?"_blank":"_self" ;
+		if ($selected.attr('data-href')) { 
+		 	window.open($selected.attr('data-href'), _target); 
+		 } 
+	});
+	//無障礙Esc(退出彈跳視窗)
+    $(document).keyup(function(e) { 
+    	if (e.which == 27) {
+    		if ($('.light-msg-box').is(':visible')) {
+    			 $(".butn-close").trigger("click");
+    			
+    		}
+    		if ($('.light-box').is(':visible')) {
+    			$(".mail-eliminate").trigger("click");
+    		}
+    	}
+    });
+    //字級大小切換
+    $(".chgfontSize").click(function() {
+    	$(".chgfontSize").removeClass("selected");
+    	var size = $(this).attr("data-size");
+    	var selectedSize = document.getElementsByClassName(size);
+    	if(size == "medium"){
+    		$("html").removeClass();
+    	}else{
+    		$("html").removeClass().addClass("set-font-size-"+size);
+    	}
+    	$(selectedSize).addClass("selected");
+    });
+    //輪播無障礙 aria-live 來標示 Live Region 需延遲添加屬性
+    setTimeout(function(){
+    	$(".slick-list").attr("aria-live","off");
+    	if($("html").attr("lang") !="en"){
+    		$(".slick-next").attr("aria-label","下一張");
+    		$(".slick-next").html("下一張");
+    		$(".slick-prev").attr("aria-label","上一張");
+    		$(".slick-prev").html("上一張");
+    		$("#toTop").html("<span  id=\"toTopHover\" role=\"button\" style=\"opacity: 0;\"></span>回到頂端");
+    	}else{
+    		$("#toTop").html("<span  id=\"toTopHover\" role=\"button\" style=\"opacity: 0;\"></span>To Top");
+    	}
+    },'100');
+});

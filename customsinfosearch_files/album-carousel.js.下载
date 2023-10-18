@@ -1,0 +1,56 @@
+// Album carousel  
+var albumCarousel = function(imgArr) {
+    var $album = $('.album-carousel');
+
+    var parm = {
+        showIdx: 0,
+        imgArrLen: imgArr.length
+    }
+
+    // 顯示選中的照片大圖
+    var show = function(photo) {
+        var img = new Image();
+        img.src = photo;
+        img.onload = function(){
+            // console.log(img.width);
+            $album.find('.album-photo').empty().append('<img src="'+ photo +'">');
+            $album.find('.description').text('第 '+ (parm.showIdx + 1) +' 張相片，共 '+ parm.imgArrLen +' 張相片');
+        }
+    }
+
+    // 點擊相簿列表裡的相片
+    $('.album-carousel-btn').click(function() {
+        parm.showIdx = $(this).parent().index();
+        $album.css('display','flex');
+        $('.album-close').focus();
+        show(imgArr[parm.showIdx]);
+        
+    })
+
+    // 關閉相簿彈窗
+    $album.find('.album-close').click(function() {
+        $album.css('display','none');
+    })
+
+    // 點擊上一張與下一張箭頭
+    $album.find('.next, .prev').click(function() {
+        var arrowType = $(this).attr('class');
+        parm.showIdx = (arrowType == 'next'? (parm.showIdx + 1) : (parm.showIdx - 1));
+        parm.showIdx > 0 ? ($album.find('.prev').css('display','block')) : ($album.find('.prev').css('display','none'));
+        (parm.showIdx + 1) < parm.imgArrLen ? ($album.find('.next').css('display','block')) : ($album.find('.next').css('display','none'));
+        show(imgArr[parm.showIdx]);
+    })
+
+    // 滑鼠移出移入效果 (上一張與下一張箭頭顯示效果)
+    // $album.find('.album-content').hover(function() {
+    //     if($(window).width() > 769) {
+    //         if(parm.showIdx > 0) {
+    //             (parm.showIdx + 1) < parm.imgArrLen ? $album.find('.next, .prev').css('display','block') : $album.find('.prev').css('display','block'); 
+    //         } else {
+    //             $album.find('.next').css('display','block');    
+    //         }
+    //     }
+    // }, function(){
+    //     $(window).width() > 769 && $album.find('.next, .prev').css('display','none');
+    // })
+}

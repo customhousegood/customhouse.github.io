@@ -1,0 +1,54 @@
+/*------------------------
+    Accordion
+------------------------*/
+;(function() {
+    function ctrlOneAccordion(header) {
+        var accDiv = header.parentElement;
+        var accButns = accDiv.querySelectorAll('.accordion-header');
+        var hasActive = false;
+        var activeButn;
+
+        accDiv.getElementsByClassName('active')[0] && (hasActive = true);
+        activeButn = hasActive && accDiv.getElementsByClassName('active')[0];
+        
+        accButns.forEach(function(button) {
+            button.classList.remove('active');
+            button.removeAttribute('role');
+            button.setAttribute('aria-expanded', false);
+            button.nextElementSibling.setAttribute('aria-hidden', true);
+            var panel = button.nextElementSibling;
+            panel.style.maxHeight = null;
+
+            // accroiding to css transition attribute to set 0.2 second for animate run time ;
+            setTimeout(function() {
+                button.classList.contains('active') || (panel.style.display = 'none');
+            },200)
+        });
+
+        if(header !== activeButn) {
+            header.classList.add('active');
+            header.setAttribute('aria-expanded', true);
+            header.nextElementSibling.setAttribute('aria-hidden', false); 
+            var panel = header.nextElementSibling;
+            panel.style.display = 'block';
+            panel.style.maxHeight = panel.scrollHeight + 'px';
+        }
+    }
+
+    $(function() {
+    	var accordions = document.querySelectorAll('.accordion'); 
+    	accordions.forEach(function(accordion) {
+    		var accButns = accordion.querySelectorAll('.accordion-header');
+    		
+    		accButns.forEach(function(button) {
+    			button.addEventListener('click', function(e) {
+    				ctrlOneAccordion(button);
+    			})
+    		});
+    	});
+    	
+    	document.querySelectorAll('.panel').forEach(function(panel) {
+    		panel.style.display = 'none';
+    	});
+    });
+}())

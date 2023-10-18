@@ -1,0 +1,46 @@
+var synthValid = window.speechSynthesis;
+
+function speak(validUrl, language) {
+	var val = getBroswer();
+	
+	$.post(validUrl, function(data) {
+		console.log(val.broswer);
+		if(val != null && (val.broswer === "IE" || val.broswer ==="Edge")){
+			if($("html").prop("lang")!="en"){
+				responsiveVoice.speak(data,"Chinese Taiwan Female",{rate:1});
+			}else{
+				responsiveVoice.speak(data);
+			}
+		}else{
+			console.log(data);
+			if (synthValid.speaking) {
+				console.error('speechSynthesis.speaking');
+				return;
+			}
+			var utterThis = new SpeechSynthesisUtterance(data);
+			utterThis.onend = function(event) {
+				console.log('SpeechSynthesisUtterance.onend');
+			}
+			utterThis.onerror = function(event) {
+				console.error('SpeechSynthesisUtterance.onerror');
+			}
+			utterThis.pitch = 1;
+			utterThis.rate = 1;
+			var voices = synthValid.getVoices();
+			if(language != undefined && language === 'en-US'){
+				$.each( voices, function( i, val ) {
+				  if(val.name == 'Google US English'){
+					  utterThis.voice = voices[i];
+				  }
+				});	
+			}
+			synthValid.speak(utterThis);
+		}
+	});
+}
+
+function playValid(validUrl, language){
+	event.preventDefault();
+	speak(validUrl, language);
+}
+

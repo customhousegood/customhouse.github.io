@@ -1,0 +1,271 @@
+function getImgOriginalSize(imgSrc, getImgSize) {
+    var image = new Image();
+    image.src = imgSrc;
+    image.onload = function() {
+        getImgSize({width:image.width, height:image.height});
+    }
+}
+
+// 頁籤模組
+function tabControl() {
+    var $tabF = $('.tab-function');
+
+    // Tab 無障礙
+    var isShiftTab = false;
+    var isTab = false;
+    var isMouseClick = false;
+    $tabF.mousedown(function(){
+        isMouseClick = true;
+    });
+    $tabF.keydown(function(e) {
+        isMouseClick = false;
+        isTab = (e.key === 'Tab' ? true : false);
+        isShiftTab = (e.shiftKey && e.key === 'Tab' ? true : false);
+    });
+    const accessibilityFn = function() {
+        // 解除上一個選中的 tab 焦點設定並重新綁定
+        $tabF.find('a').unbind('focus');
+        $tabF.find('a').unbind('focusout');
+
+        $tabF.each(function() {
+            var $tabInnerBlock = $(this).find('.tab-inner-block'); // 選中 tab 主要內容區塊
+            var $tabTitleUl = $(this).find('.tab-title'); // tab 選項區塊
+            var $tabSelectA = $tabTitleUl.find('.tab-select');
+            var tabTitleLen = $tabTitleUl.find('li').length;
+            var aLen = $tabInnerBlock.find('a').length;
+            
+            $tabTitleUl.find('.title-tab').focus(function(e) {
+                // 若為最後一個 DOM 且不為選中之標籤
+                if (!$(this).parent().next()[0] && !$(this).is('.tab-select')) {
+                    $tabInnerBlock.find('a').attr('tabindex', '-1');
+                }
+            });
+            $tabTitleUl.find('.title-tab').focusout(function() {
+                // 若為最後一個 DOM 且不為選中之標籤
+                if (!$(this).parent().next()[0] && !$(this).is('.tab-select')) {
+                    $tabInnerBlock.find('a').attr('tabindex', '0');
+                    isTab = false;
+                }
+            });
+            $tabSelectA.focusout(function() {
+                if (!isShiftTab) {
+                    $tabInnerBlock.find('a').eq(0).focus();
+                }
+            });
+            // 選中標籤選項的下一個標籤選項失去焦點
+            $tabSelectA.parent().next().find('a').focusout(function() {
+                // 若為鍵盤 shift + tab 並且為標籤選項
+                if (isShiftTab && $(this).is('.title-tab')) {
+                    $tabInnerBlock.find('a').eq(aLen - 1).focus();
+                }
+            });
+            $tabInnerBlock.find('a').eq(0).focusout(function() {
+                if (isShiftTab) {
+                    $tabSelectA.focus();
+                }
+            });
+            $tabInnerBlock.find('a').eq(aLen - 1).focus(function() {
+                var isLastSelected = $tabTitleUl.find('li').eq(tabTitleLen - 1).find('a').is('.tab-select');
+                // 若從其他區塊模組鍵盤操作進入頁籤區塊
+                if (!isTab && !isShiftTab && !isMouseClick && !isLastSelected) {
+                    $tabTitleUl.find('li').eq(tabTitleLen - 1).find('a').focus();
+                }
+            });
+            $tabInnerBlock.find('a').eq(aLen - 1).focusout(function() {
+                // 若為頁籤區塊內鍵盤操作且非 shift + tab 且非最後主要內容區塊
+                if (isTab && !isShiftTab && $tabSelectA.parent().index() < (tabTitleLen - 1)) {
+                    console.log('xxxx')
+                    $tabSelectA.parent().next().find('a').focus();
+                }
+            });
+        });
+    };
+
+    // Tab 切換
+    $tabF.find('.title-tab').click(function() {
+        var $tabBox = $(this).parent().parent().parent();
+        var $liTitleTab = $(this).parent();
+        var $tabInner = $tabBox.find('.tab-inner');
+        $tabBox.find('.title-tab').removeClass('tab-select');
+        $tabInner.removeClass('tab-inner-block');
+        $tabInner.eq($liTitleTab.index()).addClass('tab-inner-block');
+        $tabBox.find('.tab-select-text').text($(this).text());
+        $(this).addClass('tab-select');
+
+        // 無障礙 DOM 重新設定
+        $tabBox.find('.tab-inner a').attr('tabindex', '0');
+        accessibilityFn();
+
+        if ($(window).width() < 601) {
+            $liTitleTab.parent().css('display','none');
+        }
+    });
+    $tabF.find('.tab-select-text').click(function(e) {
+        e.preventDefault();
+        var $tabBox = $(this).parent();
+        $tabBox.find('.tab-title').slideToggle();
+    });
+
+    accessibilityFn();
+}
+
+// just for test
+function testSort() {
+    $('.bulletin-list .link-select-content a').click(function() {
+        var $self = $(this);
+        var $bulletinList = $self.parent().parent().parent();
+        var idx = $self.index();
+        $bulletinList.find('.link-select-content a').removeClass('selected');
+        $bulletinList.find('.list').css('display','none').eq(idx).css('display','block');
+        $bulletinList.find('.more').css('display','none').eq(idx).css('display','block');
+        $self.addClass('selected');
+    })
+}
+
+$(document).ready(function() {
+    tabControl();
+    testSort();
+
+    // 網頁無障礙插入主要內容導盲磚
+    if (!document.getElementById("a_C")) {
+	    var menuParent = $('.menu-box').parent().parent().parent().parent();
+	    menuParent.prev().is('header') || (menuParent = menuParent.parent());
+	    if(menuParent.prev().is('header')) {
+	        var mainContent = menuParent.next();
+	        var accesskeyTxt = '<div class="accesskey"><a href="#a_C" id="a_C" accesskey="c" title="中央內容區塊">:::</a></div>';
+	        mainContent.find('>div').is('.container') || (mainContent = mainContent.find('>.function-cabinet:first-child'));
+	        mainContent.find('>.container:first-child>.row:first-child>div:first-child>div').before(accesskeyTxt);
+	    }
+	}
+    $(".ui-state-default").click(function(){
+        $(".ui-icon-closethick").focus();
+    });
+    $(".link-classification").click(function(){
+        $(".link-select-content").toggle();
+    });
+    // 回到頁面最上面
+    $().UItoTop({easingType:'easeOutQuart'});
+
+    // 為了 header bg 偵測 header second menu top 高度
+    $('header').css('background-position','center top ' + $('header .second-menu-top').height() + 'px');
+
+    // logo image max size depend on original image width
+    getImgOriginalSize($('header .logo-box a img').attr('src'), function(size){
+        if(size.width < 450) {
+            $('header .logo-box a img').css('max-width', size.width + 'px');
+        }
+        $('header .logo-box a img').css('opacity', '1');
+    })
+
+    // 複製頁首功能至選單RWD顯示區塊
+    $('.rwd-header-function').append( $('.header-width .function-header').clone(true));
+
+    // 選單無障礙
+    isMenuShiftTab = false;
+    $('.menu-box').keydown(function(e) {
+        isMenuShiftTab = (e.shiftKey && e.key === 'Tab' ? true : false);
+    });
+    $('.menu-box .classification-menu').focus(function() {
+        $(this).addClass('open');
+        $(this).next().addClass('open');
+    });
+    $('.menu-box .classification-menu').focusout(function() {
+        if ($(this).next().find('li').length === 0) {
+            $(this).removeClass('open')
+        }
+        if (isMenuShiftTab) {
+            $(this).removeClass('open');
+            $(this).next().removeClass('open');
+        }
+    });
+    $('.menu-box .menu-floor-down li:last-child a').focusout(function() {
+        if(!isMenuShiftTab) {
+            var $ul = $(this).parent().parent();
+            $ul.removeClass('open');
+            $ul.prev().removeClass('open');
+        }
+    });
+    $('.menu-box ul.menu li').hover(function() {
+        $('.menu-box').find('.open').removeClass('open');
+    });
+    $('*').click(function() {
+        $('.menu-box').find('.open').removeClass('open');
+    });
+
+    // 選單控制
+    $(".hamburger").click(function(){
+        $(".menu-content").toggle();
+    });
+    $(".hamburger-box").click(function(){
+        $(".menu-box").toggle();
+    });
+    $(".menu-box .container-hide a").click(function() {
+        $(".menu-box").toggle();
+    });
+    $(".menu-box .classification-menu").click(function (e) {
+        if ($(window).width() < 769 && $(this).next('ul').children().length>0) {
+            e.preventDefault();
+            $(".menu-floor-down").hide();
+            $(this).next().slideToggle()
+        }
+    });
+    $(".close-switch").click(function(){
+        $(".close-switch-container").toggle();
+    });
+    $(".showRight-switch").click(function(){
+        $(".showRight-container").toggle();
+    });
+    $(".fb-button").click(function(){
+        $(".fb-box").toggle();
+    });
+    $(".bell-button").click(function(){
+        $(".bell-container").toggle();
+    });
+
+    // 網站地圖開關
+    $('.web-map a.ctrl').click(function(e) {
+        e.preventDefault();
+        var lang = $('html').attr('lang');
+        var $map = $(this).parent();
+        var mapStatus = $(this).hasClass('open')?false:true;
+        $(this).removeClass(mapStatus ? 'close' : 'open').addClass(mapStatus ? 'open' : 'close');
+        $(this).text(mapStatus ?
+            (lang == 'en' ? 'Open': '開啟') : (lang == 'en' ? 'Close': '關閉'));
+        $(this).attr('title', mapStatus ? 
+            (lang == 'en' ? 'Open[WepMap]': '開啟[網站地圖]') :
+            (lang == 'en' ? 'Close[WepMap]': '關閉[網站地圖]'));
+        $map.find('ul').removeClass(mapStatus ? 'open' : 'close').addClass(mapStatus ? 'close' : 'open');
+    });
+
+    // 網站地圖細項開關(RWD)
+    $('.web-map ul li h3').click(function() {
+        if($(window).width() > 600) return false;
+
+        var $self = $(this);
+        var $a = $self.parent().find('a'); 
+        $a.css('display', $a.is(':visible') ? 'none' : 'block' );
+    });
+});
+
+$(window).resize(function() {
+    var $window = $(this);
+    
+    if($window.width() > 768) {
+        $('.menu-box').removeAttr('style');
+        $('.menu-box .menu-floor-down').removeAttr('style');
+    }
+
+    if($window.width() > 600) {
+        $('.tab-function .tab-title').removeAttr('style');
+        $('.web-map ul li a').removeAttr('style');
+    }
+});
+
+$(window).scroll(function() {
+    // 選單凍結
+    var $menu = $('.menu-box');
+    var menuOriginalTop = $('.menu-box').parent().offset().top;
+    var scrollTopVal = $(this).scrollTop();
+
+    scrollTopVal > menuOriginalTop ? $menu.addClass('menu-fixed') : $menu.removeClass('menu-fixed');
+});

@@ -1,0 +1,48 @@
+var xssUtil = {
+    /**
+     * 將url中的html字元轉義， 僅轉義  ', ", <, > 四個字元
+     * @param  { String } str 需要轉義的字串
+     * @param  { RegExp } reg 自定義的正則
+     * @return { String }     轉義後的字串
+     */
+    unhtmlForUrl: function (str, reg) {
+        return str ? str.replace(reg || /[<">']/g, function (a) {
+            return {
+                '<': '&lt;',
+                '&': '&amp;',
+                '"': '&quot;',
+                '>': '&gt;',
+                "'": '&#39;'
+            }[a]
+
+        }) : '';
+    },
+    /**
+     * 將str中的轉義字元還原成html字元
+     * @see UE.utils.unhtml(String);
+     * @method html
+     * @param { String } str 需要逆轉義的字串
+     * @return { String } 逆轉義後的字串
+     * @example
+     * ```javascript
+     *
+     * var str = '&lt;body&gt;&amp;&lt;/body&gt;';
+     *
+     * //output: <body>&</body>
+     * console.log( UE.utils.html( str ) );
+     *
+     * ```
+     */
+    html: function (str) {
+        return str ? str.replace(/&((g|l|quo)t|amp|#39|nbsp);/g, function (m) {
+            return {
+                '&lt;': '<',
+                '&amp;': '&',
+                '&quot;': '"',
+                '&gt;': '>',
+                '&#39;': "'",
+                '&nbsp;': ' '
+            }[m]
+        }) : '';
+    },
+}
